@@ -1,0 +1,108 @@
+#!/bin/bash
+
+#This script will install needed tools,
+#connect to remote server of your choose,
+#will scan via nmap through the remote server for open ports on a given target.
+#Then you will be able to read all the information you scanned on screen.
+
+
+#This function will install all needed tools.
+
+function INSTALL(){
+	mkdir ~/Downloads/Scriptinstall
+	cd ~/Downloads/Scriptinstall
+	sudo apt update
+	sudo apt-get install geoip-bin
+	sudo apt-get install nmap
+	sudo apt-get install whois
+	sudo apt-get install sshpass
+		if [ -d nipe ]
+	then echo "nipe already exists"
+	else git clone https://github.com/htrgouvea/nipe && cd nipe && sudo cpan install Try::Tiny Config::Simple JSON && sudo perl nipe.pl install 
+fi
+}
+INSTALL
+
+#This function will make your connection anonymous
+
+function ANONYMOUS(){
+	cd ~/Downloads/Scriptinstall/nipe && sudo perl nipe.pl start && sudo perl nipe.pl restart
+	P=$(curl -s ifconfig.io)
+	if [ -z $(geoiplookup $P | grep IL) ]
+	then echo "you are anonymous" 
+	else echo "you are not anonymous" 
+fi
+}
+ANONYMOUS
+
+#This function will display which country your 'anonymouse connect' is from.
+
+function ANONCOUNTRY(){
+	for i in $(geoiplookup $P | awk '{print $4}' | cut -d "," -f1 )
+		do echo $i
+done
+}
+ANONCOUNTRY
+
+echo 
+echo 
+#This function will ask for needed details to access the remote server of your choose via ssh service.
+
+function SSHDETAILS(){
+	echo "What ip would you like to access via ssh service?" 
+	read ip
+	echo "What is the username of this ip?"	
+	read usr
+	echo "What is the password of this ip?"
+	read pass 
+}
+
+#This function will exit if you're not anonymouse or start the ssh-data function if check corrected.
+
+function ILOREXIT(){
+	if [ $i == "IL" ]
+	then exit
+	else SSHDETAILS
+	fi
+}
+ILOREXIT
+
+echo
+echo
+#This function will scan for open ports of your given target via nmap through remote server
+
+
+function SSH1(){
+	echo "what is your target ip?"
+	read target
+	cd ~/Downloads/Scriptinstall/nipe
+	sshpass -p $pass ssh $usr@$ip -o StrictHostKeyChecking=no "curl -s ifconfig.io" > country.txt | tail -n 50 > country.txt
+	cat country.txt
+	sshpass -p $pass ssh $usr@$ip -o StrictHostKeyChecking=no "whois $target" >> whoisT.txt
+	cat whoisT.txt
+	sshpass -p $pass ssh $usr@$ip -o StrictHostKeyChecking=no "uptime" > uptime.txt
+	cat uptime.txt
+	sshpass -p $pass ssh $usr@$ip -o StrictHostKeyChecking=no "date" > date.txt
+	cat date.txt
+	sshpass -p $pass ssh $usr@$ip -o StrictHostKeyChecking=no "nmap -sV $target" > nmap.txt
+	cat nmap.txt
+}
+SSH1
+
+
+#This function will display all the information the script scanned via nmap
+
+function SSHREAD(){
+	cd ~/Downloads/Scriptinstall/nipe
+	echo "You have choosen $ip to connect with ssh" > read.txt
+	echo "The ssh machine is located in $(cat country.txt)" >> read.txt
+	echo "The uptime of the $ip is $(cat uptime.txt)" >> read.txt
+	echo "You have Choosen the target: $target" >> read.txt
+	echo "The whois information about $target is $(cat whoisT.txt)" >> read.txt
+	echo "The nmap scanning results of $target is $(cat nmap.txt)" >> read.txt
+	echo "Results are saved in the following read.txt file"
+	cat read.txt
+}
+SSHREAD
+
+#Hope you enjoyed my script
